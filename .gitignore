@@ -1,0 +1,40 @@
+# Node.js और npm से संबंधित
+node_modules/
+package-lock.json
+npm-debug.log
+
+# पर्यावरण चर फाइल्स
+backend/.env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+
+# बिल्ड और कैश फाइल्स
+backend/build/
+frontend/build/
+dist/
+*.log
+*.cache
+
+# IDE और एडिटर फाइल्स
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# सिस्टम फाइल्स
+.DS_Store
+Thumbs.db
+
+# डिप्लॉयमेंट और टेस्टिंग
+coverage/
+*.swp
+*.bak
+
+# प्रोजेक्ट-विशिष्ट
+backend/config/*.secret
+frontend/public/*.cache
+scripts/*.log
