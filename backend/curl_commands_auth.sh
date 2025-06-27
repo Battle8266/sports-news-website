@@ -8,8 +8,7 @@ curl -X POST https://5491b775-be59-4e18-9b88-488fde3a90ba-00-191uhpbmd3ymd.pike.
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"testpassword123"}'
 
-# न्यूज स्क्रेप एंडपॉइंट को टोकन के साथ टेस्ट करें
-# नीचे दिए गए टोकन को लॉगिन रिस्पॉन्स से कॉपी करें
-curl -X POST https://5491b775-be59-4e18-9b88-488fde3a90ba-00-191uhpbmd3ymd.pike.replit.dev/api/news/scrape \
+# NFL लाइव स्कोर एंडपॉइंट टेस्ट करें
+curl -X GET http://localhost:5000/api/news/live-scores \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <paste-your-jwt-token-here>"

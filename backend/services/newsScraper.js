@@ -1,69 +1,41 @@
-const FeedParser = require('feedparser');
-const request = require('request');
-const News = require('../models/News');
-const { verifyNews } = require('./newsVerification');
+const axios = require('axios');
 const logger = require('../utils/logger');
+require('dotenv').config();
 
-const scrapeNews = async () => {
-  const url = 'https://www.espn.com/espn/rss/news';
-  const feedparser = new FeedParser();
-  const newsItems = [];
-
-  return new Promise((resolve, reject) => {
-    const req = request(url);
-
-    req.on('error', (error) => {
-      logger(`Error fetching RSS feed: ${error.message}`);
-      reject(error);
+const fetchLiveScores = async () => {
+  try {
+    const response = await axios.get(process.env.ESPN_API_URL, {
+      params: { limit: 1000 }, // अधिकतम गेम्स के लिए
     });
-
-    req.on('response', function (res) {
-      if (res.statusCode !== 200) {
-        const error = new Error('Bad status code');
-        logger(`Error: Bad status code ${res.statusCode}`);
-        reject(error);
-        return;
-      }
-      this.pipe(feedparser);
-    });
-
-    feedparser.on('error', (error) => {
-      logger(`FeedParser error: ${error.message}`);
-      reject(error);
-    });
-
-    feedparser.on('readable', function () {
-      let item;
-      while ((item = this.read())) {
-        newsItems.push(item);
-      }
-    });
-
-    feedparser.on('end', async () => {
-      try {
-        for (const item of newsItems) {
-          const verificationResult = await verifyNews(item.title + ' ' + (item.description || ''));
-          const news = new News({
-            title: item.title || 'No title',
-            description: item.description || 'No description available',
-            link: item.link || '',
-            source: 'ESPN',
-            category: 'Sports',
-            verified: verificationResult.isVerified,
-            verificationSource: verificationResult.source, // Grok API से
-            pubDate: item.pubDate || Date.now(),
-          });
-          await news.save();
-          logger(`Saved news: ${item.title}`);
-        }
-        logger('News scraped and saved successfully!');
-        resolve();
-      } catch (error) {
-        logger(`Error saving news: ${error.message}`);
-        reject(error);
-      }
-    });
-  });
+    logger('NFL लाइव स्कोर सफलतापूर्वक प्राप्त हुए');
+    return response.data.events; // केवल events array लौटाएं
+  } catch (error) {
+    logger(`NFL लाइव स्कोर प्राप्त करने में एरर: ${error.message}`);
+    throw new Error('NFL लाइव स्कोर प्राप्त करने में एरर');
+  }
 };
 
-module.exports = { scrapeNews };
+const summarizeScoresWithGrok = async (scores) => {
+  try {
+    const grokResponse = await axios.post(
+      'https://api.x.ai/v1/summarize', // Grok API एंडपॉइंट (उदाहरण)
+      {
+        data: JSON.stringify(scores),
+        prompt: 'Summarize NFL live scores in Hindi, focusing on key matches and scores.'
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.GROK_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    logger('Grok API से स्कोर समरी प्राप्त हुई');
+    return grokResponse.data.summary;
+  } catch (error) {
+    logger(`Grok API समरी में एरर: ${error.message}`);
+    return scores; // अगर Grok फेल हो, तो मूल डेटा लौटाएं
+  }
+};
+
+module.exports = { fetchLiveScores, summarizeScoresWithGrok };
